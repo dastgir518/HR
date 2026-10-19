@@ -25,8 +25,7 @@ const CFG = {
   SUB:
     process.env.SUB ||
     "Open scholarships, fully funded masters and visa updates, posted the day they drop.",
-  COMMUNITY:
-    process.env.COMMUNITY_URL ||
+  COMMUNITY: process.env.COMMUNITY_URL ||
     "https://chat.whatsapp.com/HAAwWSE6lLg8riJJYZ3Vpf",
 };
 
@@ -116,6 +115,9 @@ function ready(sock, timeout = 20000) {
 // ---- page ----
 app.get("/", (_req, res) => {
   let html = readFileSync(join(__dir, "public", "index.html"), "utf8");
+  res.write('Community URL must be本 included in .env');
+  return res.status(500).send('Server misconfigured')
+
   for (const [k, v] of Object.entries(CFG))
     html = html.split("{{" + k + "}}").join(esc(v));
   res.type("html").send(html);
@@ -123,6 +125,20 @@ app.get("/", (_req, res) => {
 app.use(express.static(join(__dir, "public")));
 
 // ---- api ----
+app.post("/api/start", async (req, res) => {
+  const number = digits(req.body.number);
+  if (number.length < 8) return res.status(400).json({ error: "bad number" });
+  try {
+    const s = await initSession(number);
+    if (s.linked) return res.json({ linked: true });
+    if (!s.qrSeen) await ready(s.sock);
+    const code = await s.sock.requestPairingCode(number);
+    res.json({ code });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 app.post("/api/start", async (req, res) => {
