@@ -1,0 +1,13 @@
+{
+  "name": "scholar-alerts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
+    "express": "^4.19.2",
+    "pino": "^9.3.2"
+  }
+}
